@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .forms import SignUpForm, FirestoreSignUpForm
-from .recipe_data import recipe_data_ready, start_recipe_data_download
+from .recipe_data import recipe_data_ready, start_recipe_data_download, wait_for_recipe_data
 from django.conf import settings
 from django.contrib.auth import login
 import os
@@ -24,18 +24,13 @@ def parseOldListLine(line):
     return line.split('"", ""')
 
 def loadInOrderIngredients():
-    file_path = os.path.join(settings.RECIPE_DATA_DIR, 'mostRecentNERLimitRows1.txt')
-    file_path2 = os.path.join(settings.RECIPE_DATA_DIR, 'mostRecentNERLimitRows2.txt')
-
     ingredients_in_order = []
-    for file_path in [file_path, file_path2]:
-        if not os.path.exists(file_path):
-            continue
-        with open(file_path, 'r') as file:
-            for line in file:
-                ingredients_in_order.append(parseOldListLine(line))
-
+    for count, ingredients in loadInOrderIngredientsWithCount():
+        ingredients_in_order.append(ingredients)
     return ingredients_in_order
+
+def loadInOrderIngredientsWithCount():
+    return loadOldListLinesWithCount(['mostRecentNERLimitRows1.txt', 'mostRecentNERLimitRows2.txt'])
 
 def loadRecipeNames():
     return loadLines('dishNames.txt')
@@ -55,21 +50,53 @@ def makeRecipeLink(link):
     return 'https://' + link
 
 def loadAmounts():
-    file_path = os.path.join(settings.RECIPE_DATA_DIR, 'amountsAndIngredients1.txt')
-    file_path2 = os.path.join(settings.RECIPE_DATA_DIR, 'amountsAndIngredients2.txt')
-    file_path3 = os.path.join(settings.RECIPE_DATA_DIR, 'amountsAndIngredients3.txt')
-
     amountsList = []
-    for file_path in [file_path, file_path2, file_path3]:
+    for count, amounts in loadOldListLinesWithCount([
+        'amountsAndIngredients1.txt',
+        'amountsAndIngredients2.txt',
+        'amountsAndIngredients3.txt',
+    ]):
+        amountsList.append(amounts)
+    return amountsList
+
+def loadOldListLinesWithCount(file_names):
+    count = 0
+    for file_name in file_names:
+        file_path = os.path.join(settings.RECIPE_DATA_DIR, file_name)
         if not os.path.exists(file_path):
             continue
-        with open(file_path, "r") as file:
+        with open(file_path, 'r') as file:
             for line in file:
-               if not line.strip():
-                   continue
-               amountsList.append(parseOldListLine(line))
+                if line.strip():
+                    yield count, parseOldListLine(line)
+                count += 1
 
-    return amountsList
+def loadLinesAtCounts(file_names, counts):
+    wanted = set(counts)
+    found = {}
+    count = 0
+    for file_name in file_names:
+        file_path = os.path.join(settings.RECIPE_DATA_DIR, file_name)
+        if not os.path.exists(file_path):
+            continue
+        with open(file_path, 'r') as file:
+            for line in file:
+                if count in wanted:
+                    found[count] = line.strip()
+                    if len(found) == len(wanted):
+                        return found
+                count += 1
+    return found
+
+def loadOldListLinesAtCounts(file_names, counts):
+    wanted = set(counts)
+    found = {}
+    for count, line in loadOldListLinesWithCount(file_names):
+        if count in wanted:
+            found[count] = line
+            if len(found) == len(wanted):
+                return found
+    return found
 
 
 @login_required
@@ -119,37 +146,37 @@ def getDataForNow(request):
 @login_required
 def submitIngredients(request):
 	if not recipe_data_ready():
-		start_recipe_data_download()
-		message = "Recipe data is still loading. Please try the search again shortly."
-		return render(request, 'resultsForNow.html', {'recipes': [], 'message': message})
+		if not wait_for_recipe_data():
+			message = "Recipe data is still loading. Please try the search again shortly."
+			return render(request, 'resultsForNow.html', {'recipes': [], 'message': message})
 
 	ingredients = request.session.get('ingredients', [])
-	recipeIngredients = loadInOrderIngredients()
 	found = []
+	recipeIngredients = {}
 	recipes =[]
 	message = ""
-	count = 0
-	for recipe_ingredient_list in recipeIngredients:
+	for count, recipe_ingredient_list in loadInOrderIngredientsWithCount():
 		if(len(found) >= 10):
 			break
 		elif(len(ingredients) < len(recipe_ingredient_list)):
-			count += 1
 			continue
 		elif(isContained(recipe_ingredient_list, ingredients)):
 			found.append(count)
-			count += 1
+			recipeIngredients[count] = recipe_ingredient_list
 			continue
-		else:
-			count += 1
-	recipeNames = loadRecipeNames()
-	links = loadLinks()
-	amountsOfIngredients = loadAmounts()
-	for x in range(len(found)):
+	recipeNames = loadLinesAtCounts(['dishNames.txt'], found)
+	links = loadLinesAtCounts(['links.txt'], found)
+	amountsOfIngredients = loadOldListLinesAtCounts([
+		'amountsAndIngredients1.txt',
+		'amountsAndIngredients2.txt',
+		'amountsAndIngredients3.txt',
+	], found)
+	for recipeNumber in found:
 		recipe = {
-			'name': recipeNames[found[x]],
-			'ingredients': recipeIngredients[found[x]],
-			'amounts': amountsOfIngredients[found[x]],
-			'link': makeRecipeLink(links[found[x]])
+			'name': recipeNames.get(recipeNumber, ''),
+			'ingredients': recipeIngredients.get(recipeNumber, []),
+			'amounts': amountsOfIngredients.get(recipeNumber, []),
+			'link': makeRecipeLink(links.get(recipeNumber, ''))
 		}
 		recipes.append(recipe)
 	if(len(found) == 0):
@@ -165,38 +192,38 @@ def submitIngredients(request):
 @login_required
 def submitIngredientsForLater(request):
 	if not recipe_data_ready():
-		start_recipe_data_download()
-		message = "Recipe data is still loading. Please try the search again shortly."
-		return render(request, 'resultsForLater.html', {'recipes': [], 'message': message})
+		if not wait_for_recipe_data():
+			message = "Recipe data is still loading. Please try the search again shortly."
+			return render(request, 'resultsForLater.html', {'recipes': [], 'message': message})
 
 	ingredients = request.session.get('ingredientsForLater', [])
-	recipeIngredients = loadInOrderIngredients()
 	found = []
+	recipeIngredients = {}
 	recipes =[]
 	message = ""
-	count = 0
-	for recipe_ingredient_list in recipeIngredients:
+	for count, recipe_ingredient_list in loadInOrderIngredientsWithCount():
 		if(len(found) >= 10):
 			break
 		elif(len(ingredients) >= len(recipe_ingredient_list)):
-			count += 1
 			continue
 		elif(isContained(ingredients, recipe_ingredient_list)):
 			found.append(count)
-			count += 1
+			recipeIngredients[count] = recipe_ingredient_list
 			continue
-		else:
-			count += 1
 
-	recipeNames = loadRecipeNames()
-	links = loadLinks()
-	amountsOfIngredients = loadAmounts()
-	for x in range(len(found)):
+	recipeNames = loadLinesAtCounts(['dishNames.txt'], found)
+	links = loadLinesAtCounts(['links.txt'], found)
+	amountsOfIngredients = loadOldListLinesAtCounts([
+		'amountsAndIngredients1.txt',
+		'amountsAndIngredients2.txt',
+		'amountsAndIngredients3.txt',
+	], found)
+	for recipeNumber in found:
 		recipe = {
-			'name': recipeNames[found[x]],
-			'ingredients': recipeIngredients[found[x]],
-			'amounts': amountsOfIngredients[found[x]],
-			'link': makeRecipeLink(links[found[x]])
+			'name': recipeNames.get(recipeNumber, ''),
+			'ingredients': recipeIngredients.get(recipeNumber, []),
+			'amounts': amountsOfIngredients.get(recipeNumber, []),
+			'link': makeRecipeLink(links.get(recipeNumber, ''))
 		}
 		recipes.append(recipe)
 	if(len(found) == 0):
@@ -383,34 +410,34 @@ def groceryResults(request):
 
 def generate_meals(ingredients):
 	if not recipe_data_ready():
-		start_recipe_data_download()
-		return []
+		if not wait_for_recipe_data():
+			return []
 
-	recipeIngredients = loadInOrderIngredients()
 	found = []
+	recipeIngredients = {}
 	recipes =[]
-	count = 0
-	for recipe_ingredient_list in recipeIngredients:
+	for count, recipe_ingredient_list in loadInOrderIngredientsWithCount():
 		if(len(found) >= 10):
 			break
 		elif(len(ingredients) < len(recipe_ingredient_list)):
-			count += 1
 			continue
 		elif(isContained(recipe_ingredient_list, ingredients)):
 			found.append(count)
-			count += 1
+			recipeIngredients[count] = recipe_ingredient_list
 			continue
-		else:
-			count += 1
-	recipeNames = loadRecipeNames()
-	links = loadLinks()
-	amountsOfIngredients = loadAmounts()
-	for x in range(len(found)):
+	recipeNames = loadLinesAtCounts(['dishNames.txt'], found)
+	links = loadLinesAtCounts(['links.txt'], found)
+	amountsOfIngredients = loadOldListLinesAtCounts([
+		'amountsAndIngredients1.txt',
+		'amountsAndIngredients2.txt',
+		'amountsAndIngredients3.txt',
+	], found)
+	for recipeNumber in found:
 		recipe = {
-			'name': recipeNames[found[x]],
-			'ingredients': recipeIngredients[found[x]],
-			'amounts': amountsOfIngredients[found[x]],
-			'link': makeRecipeLink(links[found[x]])
+			'name': recipeNames.get(recipeNumber, ''),
+			'ingredients': recipeIngredients.get(recipeNumber, []),
+			'amounts': amountsOfIngredients.get(recipeNumber, []),
+			'link': makeRecipeLink(links.get(recipeNumber, ''))
 		}
 		recipes.append(recipe)
 	if(len(found) == 0):
