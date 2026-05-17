@@ -1,8 +1,9 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="en">
 <head>
     {% include 'head.html' %}
-    <link rel="stylesheet" href="static/grocery-list-style.css">
+    <link rel="stylesheet" href="{% static 'style/grocery-list-style.css' %}">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
         $(document).ready(function () {

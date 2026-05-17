@@ -8,7 +8,7 @@
             <li><a href="/pantry">Pantry</a></li>
         </ul>
         <div class="dropdown">
-            <img src="{% static 'profile.png' %}" class="profile-img" onclick="toggleDropdown()">
+            <img src="{% static 'img/profile.png' %}" class="profile-img" onclick="toggleDropdown()">
             <div id="dropdown-menu" class="dropdown-menu">
                 {% if user.is_authenticated %}
                     <form method="post" action="{% url 'logout' %}">

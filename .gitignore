@@ -14,5 +14,6 @@ venv
 *.tmp
 data/
 local_data/
+staticfiles/
 recipe-data.tar.gz
 kaggle.json

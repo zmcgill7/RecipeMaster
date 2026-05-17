@@ -49,6 +49,7 @@ if USE_FIRESTORE_AUTH:
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -123,16 +124,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 RECIPE_DATA_DIR = Path(os.environ.get('RECIPE_DATA_DIR', BASE_DIR / 'local_data'))
 BACKGROUND_RECIPE_DATA_DOWNLOAD = os.environ.get('BACKGROUND_RECIPE_DATA_DOWNLOAD', 'False') == 'True'
-STATICFILES_DIRS = [
-    BASE_DIR / 'RecipeMaster' / 'static',
-    BASE_DIR / 'RecipeMaster' / 'static' / 'img',
-    BASE_DIR / 'RecipeMaster' / 'static' / 'script',
-    BASE_DIR / 'RecipeMaster' / 'static' / 'style',
-]
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'

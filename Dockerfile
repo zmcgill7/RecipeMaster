@@ -10,5 +10,6 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
+RUN BACKGROUND_RECIPE_DATA_DOWNLOAD=False SECRET_KEY=build-only python manage.py collectstatic --noinput
 
 CMD ["sh", "scripts/cloudrun_start.sh"]
