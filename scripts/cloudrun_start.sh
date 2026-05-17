@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 set -e
 
 export RECIPE_DATA_DIR="${RECIPE_DATA_DIR:-/tmp/local_data}"
