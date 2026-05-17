@@ -31,13 +31,13 @@ python3 -m pip install -r requirements.txt
 Run migrations:
 
 ```bash
-python3 mysite/manage.py migrate
+python3 manage.py migrate
 ```
 
 Start the development server:
 
 ```bash
-python3 mysite/manage.py runserver
+python3 manage.py runserver
 ```
 
 Use the hosted site to try the full recipe search workflow with data:
