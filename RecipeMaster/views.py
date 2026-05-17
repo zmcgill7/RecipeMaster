@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .forms import SignUpForm, FirestoreSignUpForm
+from .recipe_data import recipe_data_ready, start_recipe_data_download
 from django.conf import settings
 from django.contrib.auth import login
 import os
@@ -8,6 +9,7 @@ import os
 def loadLines(file_name):
     file_path = os.path.join(settings.RECIPE_DATA_DIR, file_name)
     if not os.path.exists(file_path):
+        start_recipe_data_download()
         return []
     with open(file_path, 'r') as file:
         return file.read().splitlines()
@@ -116,6 +118,11 @@ def getDataForNow(request):
 
 @login_required
 def submitIngredients(request):
+	if not recipe_data_ready():
+		start_recipe_data_download()
+		message = "Recipe data is still loading. Please try the search again shortly."
+		return render(request, 'resultsForNow.html', {'recipes': [], 'message': message})
+
 	ingredients = request.session.get('ingredients', [])
 	recipeIngredients = loadInOrderIngredients()
 	found = []
@@ -157,6 +164,11 @@ def submitIngredients(request):
 
 @login_required
 def submitIngredientsForLater(request):
+	if not recipe_data_ready():
+		start_recipe_data_download()
+		message = "Recipe data is still loading. Please try the search again shortly."
+		return render(request, 'resultsForLater.html', {'recipes': [], 'message': message})
+
 	ingredients = request.session.get('ingredientsForLater', [])
 	recipeIngredients = loadInOrderIngredients()
 	found = []
@@ -370,6 +382,10 @@ def groceryResults(request):
     return render(request, "grocery-list.html", {'query': query, 'uniqueIngredientNames': uniqueIngredientNames, 'ingredients': ingredients})
 
 def generate_meals(ingredients):
+	if not recipe_data_ready():
+		start_recipe_data_download()
+		return []
+
 	recipeIngredients = loadInOrderIngredients()
 	found = []
 	recipes =[]

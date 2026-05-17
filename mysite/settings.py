@@ -126,6 +126,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 RECIPE_DATA_DIR = Path(os.environ.get('RECIPE_DATA_DIR', BASE_DIR / 'local_data'))
+BACKGROUND_RECIPE_DATA_DOWNLOAD = os.environ.get('BACKGROUND_RECIPE_DATA_DOWNLOAD', 'False') == 'True'
 STATICFILES_DIRS = [
     BASE_DIR / 'RecipeMaster' / 'static',
     BASE_DIR / 'RecipeMaster' / 'static' / 'img',
