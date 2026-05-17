@@ -27,6 +27,10 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-gtya(76p!=3k2j_f3%b9j
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.run.app').split(',')
+CSRF_TRUSTED_ORIGINS = os.environ.get(
+    'CSRF_TRUSTED_ORIGINS',
+    'https://recipe-master-353010859729.us-central1.run.app,https://recipe-master-kxmxxtiphq-uc.a.run.app,https://recipemaster.zacharymcgill.site',
+).split(',')
 
 
 # Application definition
