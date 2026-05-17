@@ -63,6 +63,9 @@
                         <input type="text" name="ingredient" id="ingredient" placeholder="Enter ingredient..." value="{{ query }}">
                         <ul class="autocomplete"></ul>
                     <input type="submit" id="addBtn" class = "btn" value="Add">
+                    {% if error %}
+                        <p class="error-message">{{ error }}</p>
+                    {% endif %}
                 </form>
             </section>
 
@@ -71,7 +74,14 @@
                 <div id="ingredient-list-container">
                     <ul class = "ingredient-list">
                         {% for ingredient in ingredients %}
-                            <li class = "grocery-ingredient" name = "grocery-ingredient" value = "grocery-ingredient">{{ingredient}}</li>
+                            <li class = "grocery-ingredient" name = "grocery-ingredient" value = "grocery-ingredient">
+                                <form method="POST" action="{% url 'removeGroceryIngredient' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="ingredient" value="{{ ingredient }}">
+                                    <button type="submit" class="remove-btn">&#10006;</button>
+                                    {{ingredient}}
+                                </form>
+                            </li>
                         {% endfor %}
                     </ul>
                     <form method="POST" action="{% url 'groceryResults' %}">
@@ -92,10 +102,10 @@
                             <div class = "recipe-details">
                                 <h2 class = "recipe-name">{{ meal.name }}</h2>
                                 <p>Ingredients: {{ meal.ingredients|join:', ' }}</p>
-                                <p><a href="{{ recipe.link }}">Full Recipe Details</a></p>
+                                <p><a href="{{ meal.link }}">Full Recipe Details</a></p>
                             </div>
-                            <input type="checkbox" id="favorite1" class="favorite-checkbox">
-                            <label for="favorite1" class="favorite-label"></label>
+                            <input type="checkbox" id="favorite{{ forloop.counter }}" class="favorite-checkbox">
+                            <label for="favorite{{ forloop.counter }}" class="favorite-label"></label>
                         </div>
                         <hr class = "recipe-spacer"/> <!-- Insert spacer for desired aesthetic -->
                     {% endfor %}

@@ -1,49 +1,42 @@
 from django.shortcuts import render, redirect
-from django.utils.safestring import mark_safe
 from django.contrib.auth.decorators import login_required
-from forms import SignUpForm
+from .forms import SignUpForm, FirestoreSignUpForm
 from django.conf import settings
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login
 import os
-# Create your views here.
+
+def loadLines(file_name):
+    file_path = os.path.join(settings.RECIPE_DATA_DIR, file_name)
+    if not os.path.exists(file_path):
+        return []
+    with open(file_path, 'r') as file:
+        return file.read().splitlines()
 
 def loadUniqueIngredients():
-    # Construct the full file path
-    file_path = os.path.join(settings.STATIC_ROOT, 'uniqueIngredients.txt')
+    return loadLines('uniqueIngredients.txt')
 
-    # Open the file and read lines
-    with open(file_path, 'r') as file:
-        ingredientNames = file.read().splitlines()
-
-    return ingredientNames
+def parseOldListLine(line):
+    line = line.strip()[4:-4]
+    if not line:
+        return []
+    return line.split('"", ""')
 
 def loadInOrderIngredients():
-    file_path = os.path.join(settings.STATIC_ROOT, 'mostRecentNERLimitRows1.txt')
-    file_path2 = os.path.join(settings.STATIC_ROOT, 'mostRecentNERLimitRows2.txt')
+    file_path = os.path.join(settings.RECIPE_DATA_DIR, 'mostRecentNERLimitRows1.txt')
+    file_path2 = os.path.join(settings.RECIPE_DATA_DIR, 'mostRecentNERLimitRows2.txt')
 
     ingredients_in_order = []
-    with open(file_path, 'r') as file:
-        for line in file:
-            line = line.strip()[4:-4]
-            line = line.split('"", ""')
-            ingredients_in_order.append(line)
-
-    with open(file_path2, 'r') as file:
-        for line in file:
-            line = line.strip()[4:-4]
-            line = line.split('"", ""')
-            ingredients_in_order.append(line)
+    for file_path in [file_path, file_path2]:
+        if not os.path.exists(file_path):
+            continue
+        with open(file_path, 'r') as file:
+            for line in file:
+                ingredients_in_order.append(parseOldListLine(line))
 
     return ingredients_in_order
 
 def loadRecipeNames():
-    file_path = os.path.join(settings.STATIC_ROOT, 'dishNames.txt')
-    file = open(file_path, "r")
-    recipeNamesInOrder = []
-    for line in file:
-        recipeNamesInOrder.append(line)
-    file.close()
-    return recipeNamesInOrder
+    return loadLines('dishNames.txt')
 
 def isContained(recipeIngredients,userIngredients):
     if(all(x in userIngredients for x in recipeIngredients)):
@@ -52,46 +45,36 @@ def isContained(recipeIngredients,userIngredients):
         return False
 
 def loadLinks():
-    file_path = os.path.join(settings.STATIC_ROOT, 'links.txt')
-    file = open(file_path, "r")
-    links = []
-    for line in file:
-        links.append(line)
-    file.close()
-    return links
+    return loadLines('links.txt')
+
+def makeRecipeLink(link):
+    if link.startswith('http://') or link.startswith('https://'):
+        return link
+    return 'https://' + link
 
 def loadAmounts():
-    file_path = os.path.join(settings.STATIC_ROOT, 'amountsAndIngredients1.txt')
-    file_path2 = os.path.join(settings.STATIC_ROOT, 'amountsAndIngredients2.txt')
-    file_path3 = os.path.join(settings.STATIC_ROOT, 'amountsAndIngredients3.txt')
+    file_path = os.path.join(settings.RECIPE_DATA_DIR, 'amountsAndIngredients1.txt')
+    file_path2 = os.path.join(settings.RECIPE_DATA_DIR, 'amountsAndIngredients2.txt')
+    file_path3 = os.path.join(settings.RECIPE_DATA_DIR, 'amountsAndIngredients3.txt')
 
-    file = open(file_path, "r")
     amountsList = []
-    for line in file:
-       line = line.strip()[4:-4]
-       line = line.split('"", ""')
-       amountsList.append(line)
-
-    file = open(file_path2, "r")
-    for line in file:
-       line = line.strip()[4:-4]
-       line = line.split('"", ""')
-       amountsList.append(line)
-
-    file = open(file_path3, "r")
-    for line in file:
-       line = line.strip()[4:-4]
-       line = line.split('"", ""')
-       amountsList.append(line)
+    for file_path in [file_path, file_path2, file_path3]:
+        if not os.path.exists(file_path):
+            continue
+        with open(file_path, "r") as file:
+            for line in file:
+               if not line.strip():
+                   continue
+               amountsList.append(parseOldListLine(line))
 
     return amountsList
 
 
-@login_required #Denys access to views and templates unless logged in
+@login_required
 def displayInitialTemplate(request):
     return render(request, "initial.html")
 
-@login_required #Denys access to views and templates unless logged in
+@login_required
 def getDataForLater(request):
     query = request.GET.get('ingredient', '')
     uniqueIngredientNames = loadUniqueIngredients()
@@ -111,7 +94,7 @@ def getDataForLater(request):
     request.session.pop('error_message', None)  # Removes any previous error message
     return render(request, 'recipeForLater.html', {'query': query, 'uniqueIngredientNames': uniqueIngredientNames, 'ingredients': ingredients, 'error': error_message})
 
-@login_required #Denys access to views and templates unless logged in
+@login_required
 def getDataForNow(request):
     query = request.GET.get('ingredient', '')
     uniqueIngredientNames = loadUniqueIngredients()
@@ -131,7 +114,7 @@ def getDataForNow(request):
     request.session.pop('error_message', None)  # Removes any previous error message
     return render(request, 'recipeForNow.html', {'query': query, 'uniqueIngredientNames': uniqueIngredientNames, 'ingredients': ingredients, 'error': error_message})
 
-@login_required #Denys access to views and templates unless logged in
+@login_required
 def submitIngredients(request):
 	ingredients = request.session.get('ingredients', [])
 	recipeIngredients = loadInOrderIngredients()
@@ -139,13 +122,13 @@ def submitIngredients(request):
 	recipes =[]
 	message = ""
 	count = 0
-	for list in recipeIngredients:
+	for recipe_ingredient_list in recipeIngredients:
 		if(len(found) >= 10):
 			break
-		elif(len(ingredients) < len(list)):
+		elif(len(ingredients) < len(recipe_ingredient_list)):
 			count += 1
 			continue
-		elif(isContained(list, ingredients)):
+		elif(isContained(recipe_ingredient_list, ingredients)):
 			found.append(count)
 			count += 1
 			continue
@@ -159,7 +142,7 @@ def submitIngredients(request):
 			'name': recipeNames[found[x]],
 			'ingredients': recipeIngredients[found[x]],
 			'amounts': amountsOfIngredients[found[x]],
-			'link': links[found[x]]
+			'link': makeRecipeLink(links[found[x]])
 		}
 		recipes.append(recipe)
 	if(len(found) == 0):
@@ -172,7 +155,7 @@ def submitIngredients(request):
 	request.session['message'] = message
 	return render(request, 'resultsForNow.html', {'recipes': recipes, 'message': message})
 
-@login_required #Denys access to views and templates unless logged in
+@login_required
 def submitIngredientsForLater(request):
 	ingredients = request.session.get('ingredientsForLater', [])
 	recipeIngredients = loadInOrderIngredients()
@@ -180,13 +163,13 @@ def submitIngredientsForLater(request):
 	recipes =[]
 	message = ""
 	count = 0
-	for list in recipeIngredients:
+	for recipe_ingredient_list in recipeIngredients:
 		if(len(found) >= 10):
 			break
-		elif(len(ingredients) >= len(list)):    #This is just the opposite of recipe for later because we want recipes that contain our users list instead of the other way around
+		elif(len(ingredients) >= len(recipe_ingredient_list)):
 			count += 1
 			continue
-		elif(isContained(ingredients, list)):   #This is just the opposite of recipe for later because we want recipes that contain our users list instead of the other way around
+		elif(isContained(ingredients, recipe_ingredient_list)):
 			found.append(count)
 			count += 1
 			continue
@@ -201,7 +184,7 @@ def submitIngredientsForLater(request):
 			'name': recipeNames[found[x]],
 			'ingredients': recipeIngredients[found[x]],
 			'amounts': amountsOfIngredients[found[x]],
-			'link': links[found[x]]
+			'link': makeRecipeLink(links[found[x]])
 		}
 		recipes.append(recipe)
 	if(len(found) == 0):
@@ -224,53 +207,75 @@ def clearIngredientsForLater(request):
         del request.session['ingredientsForLater']
     return redirect('getDataForLater')
 
-#def passwordReset(request):
-#    return redirect('login')
-
 def signUp(request):
+    formClass = FirestoreSignUpForm if settings.USE_FIRESTORE_AUTH else SignUpForm
     if(request.method == "POST"):
-        form = SignUpForm(request.POST)
+        form = formClass(request.POST)
         if(form.is_valid()):
             user = form.save()
             login(request, user)
             return redirect('login')
     else:
-        form = SignUpForm()
+        form = formClass()
     return render(request, 'signup.html', {'form': form})
 
-@login_required #Denys access to views and templates unless logged in
+@login_required
 def showGroceryList(request):
     query = request.GET.get('ingredient', '')
     uniqueIngredientNames = loadUniqueIngredients()
+    error_message = None
     if request.method == 'POST':
         ingredient = request.POST.get('ingredient')
         if ingredient:
             ingredients = request.session.get('groceryIngredients', [])
-            ingredients.append(ingredient)
-            request.session['groceryIngredients'] = ingredients
-            return redirect('grocery-list')
+            if ingredient in ingredients:
+                error_message = "Ingredient has already been entered"
+            else:
+                ingredients.append(ingredient)
+                request.session['groceryIngredients'] = ingredients
+                return redirect('grocery-list')
     ingredients = request.session.get('groceryIngredients', [])
 
-    return render(request, "grocery-list.html", {'query': query, 'uniqueIngredientNames': uniqueIngredientNames, 'ingredients': ingredients})
+    return render(request, "grocery-list.html", {'query': query, 'uniqueIngredientNames': uniqueIngredientNames, 'ingredients': ingredients, 'error': error_message})
 
-@login_required #Denys access to views and templates unless logged in
+@login_required
 def showSavedRecipes(request):
     savedRecipes = request.session.get('savedRecipes', [])
     return render(request, "savedRecipes.html", {'recipes': savedRecipes})
 
-@login_required #Denys access to views and templates unless logged in
+@login_required
 def showPantry(request):
     query = request.GET.get('ingredient', '')
     uniqueIngredientNames = loadUniqueIngredients()
+    error_message = None
     if request.method == 'POST':
         ingredient = request.POST.get('ingredient')
         if ingredient:
             ingredients = request.session.get('pantryIngredients', [])
-            ingredients.append(ingredient)
-            request.session['pantryIngredients'] = ingredients
-            return redirect('pantry')
+            if ingredient in ingredients:
+                error_message = "Ingredient has already been entered"
+            else:
+                ingredients.append(ingredient)
+                request.session['pantryIngredients'] = ingredients
+                return redirect('pantry')
     ingredients = request.session.get('pantryIngredients', [])
-    return render(request, "pantry.html", {'query': query, 'uniqueIngredientNames': uniqueIngredientNames, 'ingredients': ingredients})
+    return render(request, "pantry.html", {'query': query, 'uniqueIngredientNames': uniqueIngredientNames, 'ingredients': ingredients, 'error': error_message})
+
+def removeGroceryIngredient(request):
+    ingredient = request.POST.get('ingredient')
+    ingredients = request.session.get('groceryIngredients', [])
+    if ingredient in ingredients:
+        ingredients.remove(ingredient)
+        request.session['groceryIngredients'] = ingredients
+    return redirect('grocery-list')
+
+def removePantryIngredient(request):
+    ingredient = request.POST.get('ingredient')
+    ingredients = request.session.get('pantryIngredients', [])
+    if ingredient in ingredients:
+        ingredients.remove(ingredient)
+        request.session['pantryIngredients'] = ingredients
+    return redirect('pantry')
 
 def importForLater(request):
     duplicates_found = False
@@ -308,7 +313,7 @@ def importForNow(request):
 
     return redirect('getDataForNow')
 
-@login_required #Denys access to views and templates unless logged in
+@login_required
 def saveRecipe(request):
     name = request.POST.get('recipe_name')
     ingredients = request.POST.get('recipe_ingredients').split(', ')
@@ -327,7 +332,7 @@ def saveRecipe(request):
     recipes = request.session.get('recipes', [])
     return render(request, 'resultsForLater.html', {'recipes': recipes, 'message': message})
 
-@login_required #Denys access to views and templates unless logged in
+@login_required
 def saveRecipeForNow(request):
     name = request.POST.get('recipe_name')
     ingredients = request.POST.get('recipe_ingredients').split(', ')
@@ -351,7 +356,7 @@ def clearSavedRecipes(request):
         del request.session['savedRecipes']
     return redirect('savedRecipes')
 
-@login_required #Denys access to views and templates unless logged in
+@login_required
 def groceryResults(request):
     query = request.GET.get('ingredient', '')
     uniqueIngredientNames = loadUniqueIngredients()
@@ -369,13 +374,13 @@ def generate_meals(ingredients):
 	found = []
 	recipes =[]
 	count = 0
-	for list in recipeIngredients:
+	for recipe_ingredient_list in recipeIngredients:
 		if(len(found) >= 10):
 			break
-		elif(len(ingredients) < len(list)):
+		elif(len(ingredients) < len(recipe_ingredient_list)):
 			count += 1
 			continue
-		elif(isContained(list, ingredients)):
+		elif(isContained(recipe_ingredient_list, ingredients)):
 			found.append(count)
 			count += 1
 			continue
@@ -389,7 +394,7 @@ def generate_meals(ingredients):
 			'name': recipeNames[found[x]],
 			'ingredients': recipeIngredients[found[x]],
 			'amounts': amountsOfIngredients[found[x]],
-			'link': links[found[x]]
+			'link': makeRecipeLink(links[found[x]])
 		}
 		recipes.append(recipe)
 	if(len(found) == 0):

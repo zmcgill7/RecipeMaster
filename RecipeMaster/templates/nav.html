@@ -11,7 +11,10 @@
             <img src="{% static 'profile.png' %}" class="profile-img" onclick="toggleDropdown()">
             <div id="dropdown-menu" class="dropdown-menu">
                 {% if user.is_authenticated %}
-                    <a href="/logout">Log out</a>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit">Log out</button>
+                    </form>
                 {% else %}
                     <a href="{% url 'login' %}">Log in</a>
                 {% endif %}
@@ -43,7 +46,21 @@
         display: block;
     }
 
-    .dropdown-menu a:hover {
+    .dropdown-menu button {
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font: inherit;
+        width: 100%;
+        text-align: left;
+    }
+
+    .dropdown-menu a:hover,
+    .dropdown-menu button:hover {
         background-color: #f1f1f1;
     }
 
@@ -51,6 +68,3 @@
         display: block;
     }
 </style>
-    </div>
-</nav>
-

@@ -23,6 +23,8 @@
         font-style: normal;
         font-weight: 400;
         color: #0E1C36;
+        max-width: 55rem;
+        width: 90%;
         }
         .result a{
         text-decoration: underline;
@@ -71,12 +73,12 @@
 <body>
     {% include 'nav.html' %}
     <main>
-        <h2 class = "result">
-            {% if recipes %}
-                {% for recipe in recipes %}
-                    Recipe name: {{ recipe.name }} <br>
-                    Ingredients: {{ recipe.ingredients|join:", " }} <br>
-                    Amounts:
+        {% if recipes %}
+            {% for recipe in recipes %}
+                <div class = "result">
+                    <h2>Recipe name: {{ recipe.name }}</h2>
+                    <p>Ingredients: {{ recipe.ingredients|join:", " }}</p>
+                    <p>Amounts:</p>
                     <ul>
                         {% for amount in recipe.amounts %}
                             <li>{{ amount }}</li>
@@ -91,11 +93,13 @@
                         <input type="hidden" name="recipe_amounts" value="{{ recipe.amounts|join:', ' }}">
                         <button type="submit" class="heart-btn"> </button>
                     </form>
-                {% endfor %}
-            {% else %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class = "result">
                 <p>{{ message }}</p>
-            {% endif %}
-        </h2>
+            </div>
+        {% endif %}
     </main>
 </body>
 </html>

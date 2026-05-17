@@ -49,6 +49,10 @@
         row-gap: 30px;
         column-gap: 30px;
         flex-wrap: wrap;
+        justify-content: center;
+        width: 80%;
+        margin: 25px auto;
+        padding: 25px;
 
         /*style text*/
         font-size: 15px;
@@ -66,14 +70,19 @@
     }
 
     .ingredient-container {
-        background-color: #FFF;
+        background-color: #D7F9FF;
+        border: 1px solid black;
         border-radius: 0.5em;
-        padding:5px 10px;
+        padding:8px 14px;
+        display: flex;
+        align-items: center;
+        column-gap: 5px;
 
     }
 
-    .pantry-wrapper p1 {
+    .pantry-wrapper p {
         text-decoration: none;
+        margin: 0;
     }
 
     .pantry-wrapper button {
@@ -81,12 +90,27 @@
         border: none;
         cursor:pointer;
     }
+
+    .ingredient-container form {
+        margin: 0;
+    }
+
+    .remove-btn {
+        font-size: 12px;
+    }
     ul.autocomplete {
         list-style-type: none;
         padding: 0;
     }
     ul.autocomplete li {
         cursor: pointer;
+    }
+
+    .error-message {
+        color: red;
+        margin: 10px 0;
+        font-size: 16px;
+        text-align: center;
     }
 </style>
 <body>
@@ -102,18 +126,27 @@
                 <button type="submit" name="addIngredient" class="btn">Add Ingredient</button>
             </div>
             <ul class="autocomplete ingredients"></ul>
+            {% if error %}
+                <p class="error-message">{{ error }}</p>
+            {% endif %}
         </form>
+    </div>
 
 <!-- Placeholder text -->
     <section class="pantry-wrapper">
         {% for ingredient in ingredients %}
         <div class="ingredient-container">
-            <button>&#10006;</button>
-            <p1>{{ ingredient }}</p1>
+            <form method="POST" action="{% url 'removePantryIngredient' %}">
+                {% csrf_token %}
+                <input type="hidden" name="ingredient" value="{{ ingredient }}">
+                <button type="submit" class="remove-btn">&#10006;</button>
+            </form>
+            <p>{{ ingredient }}</p>
         </div>
+        {% empty %}
+        <p>No ingredients have been added yet.</p>
         {% endfor %}
     </section>
 
 </body>
 </html>
-

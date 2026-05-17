@@ -1,0 +1,290 @@
+.btn{
+    border-style: solid;
+    border-color: black;
+    border-width: 1px;
+    background-color: #d7f9ff;
+    border-radius: 16px;
+    cursor: pointer;
+    color: #000000;
+    font-size: 1.5em;
+    font-weight: bold;
+    text-decoration: none;
+    font-family: urbana, sans-serif;
+    font-style: normal;
+    font-weight: 300;
+}
+
+#addBtn {
+    display: inline;
+    padding: 0.1em 3em;
+}
+
+#saveBtn{
+    text-align: center;
+    font-style: italic;
+    margin: 20px auto;
+    display: block;
+    max-width: 90%;
+    white-space: normal;
+    padding: 0.25em 0.25em;
+}
+
+
+.btn:active,
+.btn:hover {
+    background-color: #AFCBFF;
+}
+
+#page-layout {
+    position: static;
+    min-height: 100vh;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    overflow: auto;
+    justify-content: center;
+    gap: 3%;
+    display: flex;
+    background-color: #ffede1;
+}
+
+#ingredient-search {
+    display: flex;
+    flex-direction: row;
+    align-items:start; 
+    justify-content: center; 
+    min-width: 0;
+    width: 28%;
+    margin-top: 9em;
+    margin-left: 0;
+}
+
+#ingredient-searchbar {
+    display: inline;
+    margin-right: 5em;
+    font-family: marigny, sans-serif;
+    font-style: normal;
+    font-weight: 400;
+
+    height: 2em;
+    width: 20em;
+    border-radius: 3em;
+    padding-left: 1.5em;
+}
+
+#grocery-list {
+    text-align: center;
+    width: 34%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    row-gap: 0em;
+}
+
+#grocery-list h1{
+    font-family: sauna-new, sans-serif;
+    font-style: normal;
+    font-weight: 900;
+    font-size: 4em;
+    margin-top: 0.4em;
+}
+
+#ingredient-list-container {
+    background-color: #f9fbf2;
+    padding-top: 3em;
+    width: 80%;
+    min-width: 0;
+    min-height: 18em;
+    height: auto;
+    border-radius: 2.5em;
+    box-shadow: 0 0 2px 0px black inset, 0 0 2px 0px black;
+    white-space: nowrap;
+    text-align: left;
+    font-size: 1.15em;
+    position: relative;
+    margin-top: -2em;
+}
+
+#ingredient-list-container form {
+    text-align: center;
+}
+
+.ingredient-list {
+    padding-left: 2em;
+}
+
+.grocery-ingredient form {
+    text-align: left;
+}
+
+.remove-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.ingredient-spacer {
+    display: block;
+    height: 1px;
+    width: 80%;
+    border: 0;
+    border-top: 1px solid #ccc;
+    margin: 1em 0;
+    padding: 0;
+    margin-left: 5em;
+}
+
+label {
+    display: block;
+    font-size: 1.3em;
+}
+
+.ingredient {
+    margin-right: 5em;
+    transform: scale(2.5);
+    border-radius: 0px;
+}
+
+#ingredient-list label{
+    font-family: marigny, sans-serif;
+    font-style: normal;
+    font-weight: 400;
+}
+
+#recipe-list-container {
+    text-align: center;
+    width: 28%;
+    margin-top: 6em;
+    margin-right: 0;
+}
+
+#recipe-list-container h1{
+    font-family: sauna-new, sans-serif;
+    font-style: normal;
+    font-weight: 900;
+    font-size: 2.5em;
+}
+
+#recipe-list {
+    margin-top: -3em;
+    text-align: left;
+    font-family: marigny, sans-serif;
+    font-style: normal;
+    font-weight: 400;
+}
+
+#recipe-list h2{
+    font-size: 1.2em;
+}
+
+.recipe {
+    margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.recipe-details {
+    flex: 1;
+    min-width: 0;
+    word-wrap: break-word;
+}
+
+p {
+    line-height: 1.3em;
+}
+
+.recipe-name {
+    font-style: italic;
+    color: grey;
+    line-height: 0.9em;
+}
+
+.recipe-spacer {
+    margin-top: -2em;
+    margin-bottom: -1em;
+}
+
+.favorite-checkbox {
+    display: none;
+}
+
+.favorite-label {
+    cursor: pointer;
+    font-size: 2em;
+}
+
+.favorite-label::before {
+    content: "❤";
+    color: grey;
+    opacity: 25%;
+    margin-left: 10px;
+}
+
+.favorite-checkbox:checked + .favorite-label:before {
+    color: red;
+    opacity: 100%;
+}
+
+@media (max-width: 900px) {
+    #page-layout {
+        position: static;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        overflow: visible;
+    }
+
+    #ingredient-search {
+        min-width: 0;
+        width: 90%;
+        margin: 2em auto 0 auto;
+    }
+
+    #grocery-list {
+        width: 90%;
+    }
+
+    #grocery-list h1 {
+        font-size: 3em;
+    }
+
+    #ingredient-list-container {
+        width: 90%;
+        min-width: 0;
+        min-height: 18em;
+        height: auto;
+        padding-bottom: 6em;
+        white-space: normal;
+    }
+
+    #recipe-list-container {
+        width: 90%;
+        margin: 2em auto;
+    }
+
+    #recipe-list {
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 700px) {
+    .btn {
+        font-size: 1.1em;
+    }
+
+    #ingredient {
+        width: 80%;
+        max-width: 22em;
+    }
+
+    #grocery-list h1,
+    #recipe-list-container h1 {
+        font-size: 2.2em;
+    }
+}

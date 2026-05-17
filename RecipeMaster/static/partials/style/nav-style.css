@@ -1,0 +1,61 @@
+:root {
+    --caribbeanCurrent: #156064;
+    --oxfordBlue: #0E1C36;
+    --jordyBlue: #AFCBFF;
+    --lightCyan: #D7F9FF;
+    --ivory: #F9FBF2;
+    --linen: #FFEDE1;
+}
+
+/* logo */
+.brand-logo {
+
+    /* text style */
+    font-family: "viktor-script", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 50px;
+    color: var(--oxfordBlue);
+
+}
+.nav-wrapper {
+    height: 100px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+nav {
+    background-color: var(--jordyBlue);
+    padding: 1 rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 30px;
+    display: flex;
+    justify-content: space-evenly;
+
+    /* text style */
+    font-family: "urbana", sans-serif;
+    font-weight: 700;
+    font-style: normal;
+    font-size: 20px;
+
+}
+
+nav a {
+    color: var(--ivory);
+    text-decoration: none;
+    margin: 25px;
+}
+
+/* profile image */
+.profile-img {
+    width: 50px;
+    height: 50px;
+    margin: 25px;
+}

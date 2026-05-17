@@ -6,7 +6,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh; /* Using viewport height to make it take the full available height */
+  min-height: 70vh; /* Using viewport height to make it take the full available height */
   margin: 0;
     }
 
@@ -17,6 +17,7 @@
         justify-content: center;
         /* Horizontal alignment */
         width: 450px;
+        max-width: calc(100vw - 2em);
         /* Adjust the width as needed */
         height: 300px;
         /* Adjust the height as needed */
@@ -33,6 +34,7 @@
         font-style: normal;
         font-weight: 400;
         color: #0E1C36;
+        box-sizing: border-box;
     }
 
     .flex-item {
@@ -45,6 +47,8 @@
 
     .flex-item label {
         font-weight: bold;
+        display: block;
+        margin-bottom: 0.2em;
     }
 
     .flex-container a{
@@ -77,6 +81,26 @@
         font-style: normal;
         font-weight: 300;
     }
+
+    .flex-container input {
+        display: block;
+        margin-top: 0.2em;
+    }
+
+    @media (max-width: 600px) {
+        .container {
+            min-height: 60vh;
+            padding: 1em 0;
+        }
+
+        .flex-container {
+            width: 80%;
+            max-width: 280px;
+            height: auto;
+            min-height: 260px;
+            padding: 1.5em 0;
+        }
+    }
 </style>
 
 <head>
@@ -92,11 +116,11 @@
             {% csrf_token %}
             <div class="flex-item">
                 <label for="username">Username</label>
-                <input type="text" name="username" required>
+                <input type="text" name="username" id="username" autocomplete="username" required>
             </div>
             <div class="flex-item">
                 <label for="password">Password</label>
-                <input type="password" name="password" required>
+                <input type="password" name="password" id="password" autocomplete="current-password" required>
             </div>
             <button type="submit">Login</button>
         </form>
