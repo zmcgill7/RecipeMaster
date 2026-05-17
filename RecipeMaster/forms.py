@@ -2,7 +2,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
-from .auth_backend import FirestoreUser
+from .auth_backend import FirestoreUser, make_user_id
 
 
 class SignUpForm(UserCreationForm):
@@ -44,5 +44,6 @@ class FirestoreSignUpForm(forms.Form):
         firestore.Client().collection("users").document(username).set({
             "username": username,
             "password": password,
+            "user_id": make_user_id(username),
         })
         return FirestoreUser(username, password)
